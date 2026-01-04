@@ -31,7 +31,8 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hospital.db")
 SECRET_KEY = os.getenv("SECRET_KEY", "hospital-secret-key-2024")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
-FRONTEND_URL = "http://localhost:5173"
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 print(f"📦 Using database: {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else DATABASE_URL}")
 
@@ -118,7 +119,13 @@ class UserLogin(BaseModel):
 # =============================================================================
 app = FastAPI(title="Hospital Management API")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware, 
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","), 
+    allow_credentials=True, 
+    allow_methods=["*"], 
+    allow_headers=["*"]
+)
 
 # =============================================================================
 # AUTH ENDPOINTS
@@ -185,7 +192,9 @@ def get_me(user: User = Depends(get_current_user)):
 async def google_login(request: Request):
     if not GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=501, detail="Google OAuth not configured")
-    return await oauth.google.authorize_redirect(request, "http://localhost:8000/api/auth/google/callback")
+    
+    redirect_uri = f"{BACKEND_URL}/api/auth/google/callback"
+    return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get("/api/auth/google/callback")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
@@ -947,4 +956,5 @@ def root():
 if __name__ == "__main__":
     import uvicorn
     print("🏥 Starting Hospital Management API...")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
