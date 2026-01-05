@@ -27,7 +27,7 @@ load_dotenv()
 # CONFIG
 # =============================================================================
 # Read from .env file
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hospital.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:Posdbk%40pass1906@localhost:5432/hospital")
 SECRET_KEY = os.getenv("SECRET_KEY", "hospital-secret-key-2024")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
